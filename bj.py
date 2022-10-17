@@ -25,9 +25,17 @@ def deal():
     dealer = np.array([])
     hand = hit(hand)
     dealer = hit(dealer)
+    #dealer = dealerHitAce(dealer)
     hand = hit(hand)
     dealer = hit(dealer)
     player = [hand]
+
+def dealerHitAce(person):
+    global allCards
+    person = np.append(person, 1)
+    print(int(allCards[-1]))
+    remainingCards[0] -= 1
+    return person
 
 def hitDontShow(person):
     global allCards
@@ -69,8 +77,8 @@ def calcHitOdds(remainingCards, hand, dealerCard, removeCardIndex):
             handTotal = np.sum(hand)
             if handTotal < 12 and np.isin(1, hand):
                 handTotal += 10
-            hitEv += (remainingCards[i]/total) * max(calcHitOdds(remainingCards, hand, dealerCard, i), \
-                calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, dealerCard==1))
+            hitEv += (remainingCards[i]/total) * max(calcHitOdds(np.copy(remainingCards), hand, dealerCard, i), \
+                calcStandOdds(np.copy(remainingCards), handTotal, dealerCard, -1, dealerCard==1))
     return hitEv
 
 def calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, hasA):
@@ -94,16 +102,18 @@ def calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, hasA):
             elif handTotal < i + 1 + dealerCard:
                 standEv -= remainingCards[i]/total
         else:
-            standEv += remainingCards[i]/total * calcStandOdds(remainingCards, handTotal, dealerCard + i + 1, i, hasA or i == 0)
+            standEv += remainingCards[i]/total * calcStandOdds(np.copy(remainingCards), handTotal, dealerCard + i + 1, i, hasA or i == 0)
     return standEv
 
     
 def calculateOdds(remainingCards, hand, dealerCard, removeCardIndex):
-    hitEv = calcHitOdds(remainingCards, hand, dealerCard, removeCardIndex)
+    hitEv = calcHitOdds(np.copy(remainingCards), hand, dealerCard, removeCardIndex)
+
+    #handle blackjack
     handTotal = np.sum(hand)
     if handTotal < 12 and np.isin(1, hand):
         handTotal += 10
-    standEv = calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, dealerCard == 1)
+    standEv = calcStandOdds(np.copy(remainingCards), handTotal, dealerCard, removeCardIndex, dealerCard == 1)
 
     doubleEv = 0
     splitEv = 0
@@ -111,6 +121,7 @@ def calculateOdds(remainingCards, hand, dealerCard, removeCardIndex):
         doubleEv = 0
         if hand[0] == hand[1]:
             splitEv = 0
+    #return hitEv, standEv
     return hitEv, standEv
 
 
