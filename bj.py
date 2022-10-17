@@ -38,7 +38,8 @@ def hitDontShow(person):
 def hit(person):
     global allCards
     person = np.append(person, allCards[-1])
-    remainingCards[allCards[-1]-1] -= 1
+    print(int(allCards[-1]))
+    remainingCards[int(allCards[-1])-1] -= 1
     allCards = allCards[:-1]
     return person
 
@@ -53,7 +54,7 @@ def split(handIndex):
     player.append(newHand1)
     player.append(newHand2)
 
-def calcHitOdds(remainingCards, hand, removeCardIndex):
+def calcHitOdds(remainingCards, hand, dealerCard, removeCardIndex):
     if removeCardIndex > -1:
         remainingCards[removeCardIndex] -= 1
         hand = np.append(hand, removeCardIndex + 1)
@@ -65,7 +66,12 @@ def calcHitOdds(remainingCards, hand, removeCardIndex):
         if i + 1 + np.sum(hand) > 21:
             hitEv -= (remainingCards[i]/total)
         else:
-            hitEv += (remainingCards[i]/total) * calcHitOdds(remainingCards, hand, i)
+            handTotal = np.sum(hand)
+            if handTotal < 12 and np.isin(1, hand):
+                handTotal += 10
+            hitEv += (remainingCards[i]/total) * max(calcHitOdds(remainingCards, hand, dealerCard, i), \
+                calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, dealerCard==1))
+    return hitEv
 
 def calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, hasA):
     standEv = 0
@@ -92,29 +98,24 @@ def calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, hasA):
     return standEv
 
     
-def calculateOdds(remainingCards, hand, dealerCard, removeCardIndex, hit):
-    if removeCardIndex > -1:
-        remainingCards[removeCardIndex] -= 1
-    if hit == 1:
-        hand = np.append(hand, removeCardIndex + 1)
-    elif hit == 2:
-        dealer = np.append(dealer, removeCardIndex + 1)
-    hitEv = calcHitOdds(remainingCards, hand, -1)
+def calculateOdds(remainingCards, hand, dealerCard, removeCardIndex):
+    hitEv = calcHitOdds(remainingCards, hand, dealerCard, removeCardIndex)
     handTotal = np.sum(hand)
     if handTotal < 12 and np.isin(1, hand):
         handTotal += 10
-    standEv = calcStandOdds(remainingCards, handTotal, dealerCard, -1, dealerCard == 1)
+    standEv = calcStandOdds(remainingCards, handTotal, dealerCard, removeCardIndex, dealerCard == 1)
 
     doubleEv = 0
     splitEv = 0
     if len(hand) == 2:
-        doubleEv = 
+        doubleEv = 0
         if hand[0] == hand[1]:
-            splitEv = 
-    i = 1
+            splitEv = 0
+    return hitEv, standEv
 
 
 shuffleDeck()
 deal()
 print(player)
 print(dealer)
+print(calculateOdds(remainingCards, player[0], dealer[0], -1))
